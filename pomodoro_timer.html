@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro Personalizado</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    input, button {
+      margin: 0.5em;
+      padding: 0.5em;
+      font-size: 1em;
+    }
+    #timer {
+      font-size: 3em;
+      margin: 1em 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pomodoro Personalizado</h1>
+
+    <label>Estudio (min): <input type="number" id="workTime" value="25"></label><br>
+    <label>Descanso (min): <input type="number" id="breakTime" value="5"></label><br>
+    <label>Sonido al terminar: <input type="file" id="soundFile" accept="audio/*"></label><br>
+
+    <div id="timer">25:00</div>
+
+    <button onclick="startTimer()">Iniciar</button>
+    <button onclick="pauseTimer()">Pausar</button>
+    <button onclick="resetTimer()">Reiniciar</button>
+  </div>
+
+  <audio id="audio"></audio>
+
+  <script>
+    let workDuration, breakDuration, isWork = true;
+    let timerInterval;
+    let timeRemaining;
+    let audioElement = document.getElementById('audio');
+
+    document.getElementById('soundFile').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        audioElement.src = URL.createObjectURL(file);
+      }
+    });
+
+    function updateDisplay() {
+      const minutes = Math.floor(timeRemaining / 60);
+      const seconds = timeRemaining % 60;
+      document.getElementById('timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      if (!timerInterval) {
+        const workInput = parseInt(document.getElementById('workTime').value);
+        const breakInput = parseInt(document.getElementById('breakTime').value);
+
+        if (isNaN(workInput) || isNaN(breakInput)) {
+          alert("Por favor, ingresa tiempos válidos.");
+          return;
+        }
+
+        if (!timeRemaining) {
+          workDuration = workInput * 60;
+          breakDuration = breakInput * 60;
+          timeRemaining = isWork ? workDuration : breakDuration;
+        }
+
+        timerInterval = setInterval(() => {
+          if (timeRemaining > 0) {
+            timeRemaining--;
+            updateDisplay();
+          } else {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            audioElement.play();
+            isWork = !isWork;
+            timeRemaining = isWork ? workDuration : breakDuration;
+            startTimer();
+          }
+        }, 1000);
+      }
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      timeRemaining = parseInt(document.getElementById('workTime').value) * 60;
+      isWork = true;
+      updateDisplay();
+    }
+
+    // Inicializar el temporizador con el valor por defecto
+    resetTimer();
+  </script>
+</body>
+</html>
